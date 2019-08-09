@@ -11,7 +11,7 @@ echo "Setting up Elasticsearch"
 while ! curl "$ELASTIC_ADDR" ; do
 	sleep 1
 done
-curl -XPUT "$ELASTIC_ADDR/problem" --header "Content-Type: application/json" --data '
+curl -XPUT "$ELASTICSEARCH_URL/problem" --header "Content-Type: application/json" --data '
 {
 	"settings": {
 		"index": {
