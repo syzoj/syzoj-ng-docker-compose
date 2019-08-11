@@ -74,6 +74,15 @@ services:
       - syzojnet
     ports:
       - 3301:3301
+  judge-queue:
+    build: judge-queue
+    environment:
+      AUTOMATION_HTTP_URL: http://automation:3300
+      SESSION_REDIS_ADDR: redis-session:6379
+      CACHE_REDIS_ADDR: redis-cache:6379
+      HTTP_LISTEN_PORT: 3303
+    networks:
+      - syzojnet
   problem-data:
     build: problem-data
     environment:
