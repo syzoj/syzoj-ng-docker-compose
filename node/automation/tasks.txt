@@ -1,3 +1,0 @@
-cache/user_self
-Tags: user/*/register, cache/user/*/self
-Expected data: .user, .user.uid

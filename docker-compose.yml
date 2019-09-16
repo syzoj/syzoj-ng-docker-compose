@@ -1,0 +1,45 @@
+version: '3'
+services:
+  minio:
+    image: minio/minio
+    volumes:
+      - /opt/docker-home/minio:/data
+    environment:
+      - "MINIO_ACCESS_KEY=KrF5OgAHvZtqtbhQ"
+      - "MINIO_SECRET_KEY=rTg0TZlYI2H0Br0SJrpwgPQtii8hsyRl"
+    networks:
+      - syzojng
+    command: ["server", "/data"]
+  mysql:
+    image: mysql
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - syzojng
+    environment:
+      - "MYSQL_ROOT_PASSWORD=123456"
+  redis:
+    image: redis
+    networks:
+      - syzojng
+  interface:
+    image: syzoj/syzoj-ng
+    networks:
+      - syzojng
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=syzoj
+      - MYSQL_PASSWORD=123456
+      - MYSQL_DATABASE=syzoj
+      - REDIS_ADDR=redis:6379
+      - HTTP_LISTEN_PORT=5000
+      - S3_ENDPOINT=minio:9000
+      - S3_ACCESS_KEY=KrF5OgAHvZtqtbhQ
+      - S3_SECRET_KEY=rTg0TZlYI2H0Br0SJrpwgPQtii8hsyRl
+    command: ["/app/interface"]
+    ports:
+      - 5000:5000
+networks:
+  syzojng:
+volumes:
+  mysql-data:

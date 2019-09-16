@@ -1,0 +1,5 @@
+#!/bin/sh
+set -e
+go build -o docker/judge-core github.com/syzoj/syzoj-ng-go/svc/judge-core/judge-core
+go build -o docker/interface github.com/syzoj/syzoj-ng-go/svc/interface
+docker build docker -t syzoj/syzoj-ng
