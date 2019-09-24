@@ -1,0 +1,11 @@
+{
+    "ServerUrl": "http://syzoj:5283/",
+    "ServerUser": "hello",
+    "ServerToken": "123456",
+    "RabbitMQUrl": "amqp://rabbitmq/",
+    "RedisUrl": "redis://redis-cache:6379",
+    "TestData": "/opt/syzoj/data/uploads/testdata",
+    "Priority": 1,
+    "DataDisplayLimit": 100,
+    "TempDirectory": "/tmp"
+}
