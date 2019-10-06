@@ -1,5 +1,5 @@
 {
-    "ServerUrl": "http://syzoj:5283/",
+    "ServerUrl": "http://app:5283/",
     "ServerUser": "hello",
     "ServerToken": "123456",
     "RabbitMQUrl": "amqp://rabbitmq/",

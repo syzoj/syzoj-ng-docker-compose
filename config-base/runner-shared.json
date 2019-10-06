@@ -1,7 +1,7 @@
 {
     "RabbitMQUrl": "amqp://rabbitmq/",
     "TestData": "/opt/syzoj/data/uploads/testdata",
-    "RedisUrl": "redis://redis:6379",
+    "RedisUrl": "redis://redis-cache:6379",
     "Priority": 1,
     "DebugMessageDisplayLimit": 5000,
     "OutputLimit": 104857600,
