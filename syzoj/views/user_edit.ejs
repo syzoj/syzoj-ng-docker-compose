@@ -1,0 +1,164 @@
+<% this.title = '修改资料'; %>
+<% include header %>
+<% include monaco-editor %>
+<div class="padding">
+    <div class="ui <% if (error_info === '') { %>success<% } else { %>error<% } %> message" id="error" <% if (error_info === null) { %>hidden<% } %>>
+      <% if (error_info !== null) {
+          if (error_info === '') error_info = '修改成功。';
+      %>
+      	<p id="error_info"><%= error_info %></p>
+      <% } %>
+    </div>
+		<form id="form" action="<%= syzoj.utils.makeUrl(['user', edited_user.id, 'edit']) %>" method="post" onsubmit="return check()">
+      <div class="ui form">
+      <div class="field">
+	    	<label for="username">用户名</label>
+	    	<input type="text" id="username" name="username" value="<%= edited_user.username %>"<% if (!user.allowedManage) { %> readonly<% } %>>
+	    </div>
+      <div class="field">
+	    	<label for="sex">性别</label>
+	    	<select class="ui dropdown" name="sex">
+          <option value="0" <%= edited_user.sex == 0 ? 'selected': '' %>>其它</option>
+          <option value="1" <%= edited_user.sex == 1 ? 'selected': '' %>>男</option>
+          <option value="-1" <%= edited_user.sex == -1 ? 'selected': '' %>>女</option>
+        </select>
+	    </div>
+	    <div class="field">
+	    	<label for="email">Email</label>
+	    	<input class="font-content" type="email" id="email" name="email" value="<%= edited_user.email %>"<% if (!user.allowedManage) { %> readonly<% } %>>
+	    </div>
+      <div class="inline field">
+        <label class="ui header">公开 Email</label>
+        <div class="ui toggle checkbox">
+          <input id="public_email" name="public_email" type="checkbox" <% if (edited_user.public_email) { %> checked<% } %>>
+          <label>　</label>
+        </div>
+	    </div>
+      <div class="inline field">
+        <label class="ui header">默认显示格式化后的代码（如果可用）</label>
+        <div class="ui toggle checkbox">
+          <input id="prefer_formatted_code" name="prefer_formatted_code" type="checkbox" <% if (edited_user.prefer_formatted_code) { %> checked<% } %>>
+          <label>　</label>
+        </div>
+	    </div>
+	    <div class="field">
+        <label for="information">个性签名</label>
+      </div>
+
+      </div>
+      <div class="editor editor-with-border" id="information" style="width: 100%; height: 100px; margin-bottom: 1em; ">
+        <%- this.showLoadingEditor(); %>
+      </div>
+      <input type="hidden" name="information">
+      <div class="ui form">
+
+      <div class="field">
+      <label class="ui header">密码</label>
+        <input type="password" placeholder="原密码（留空则不修改）" name="old_password" id="old_password">
+      </div>
+      <div class="two fields" id="new_password_field">
+        <div class="field">
+          <input type="password" placeholder="新密码" name="new_password" id="password1">
+        </div>
+        <div class="field">
+          <input type="password" placeholder="确认密码" id="password2">
+        </div>
+      </div>
+      <%
+      let allowedManagePrivilege = user && user.is_admin;
+      %>
+      <div class="inline field">
+        <label class="ui header">权限</label>
+        <div class="ui toggle disabled checkbox" style="margin-right: 20px; ">
+          <input disabled="disabled" type="checkbox" <% if (edited_user.is_admin) { %> checked<% } %>>
+          <label>全站管理员</label>
+        </div>
+        <div class="ui toggle <% if (!allowedManagePrivilege) { %>disabled <% } %>checkbox checkbox_privilege" data-name="manage_problem" style="margin-right: 20px; ">
+          <input <% if (!allowedManagePrivilege) { %>disabled="disabled" <% } %>type="checkbox"<% if (edited_user.privileges.includes('manage_problem')) { %> checked<% } %>>
+          <label>管理题目</label>
+        </div>
+        <div class="ui toggle <% if (!allowedManagePrivilege) { %>disabled <% } %>checkbox checkbox_privilege" data-name="manage_problem_tag" style="margin-right: 20px; ">
+          <input <% if (!allowedManagePrivilege) { %>disabled="disabled" <% } %>type="checkbox"<% if (edited_user.privileges.includes('manage_problem_tag')) { %> checked<% } %>>
+          <label>管理题目标签</label>
+        </div>
+        <div class="ui toggle <% if (!allowedManagePrivilege) { %>disabled <% } %>checkbox checkbox_privilege" data-name="manage_user">
+          <input <% if (!allowedManagePrivilege) { %>disabled="disabled" <% } %>type="checkbox"<% if (edited_user.privileges.includes('manage_user')) { %> checked<% } %>>
+          <label>管理用户</label>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 30px; ">
+        <button id="submit_button" type="submit" class="ui disabled blue labeled icon button"><i class="ui icon edit"></i>修改</button>
+        <a href="<%= syzoj.utils.makeUrl(['user', edited_user.id]) %>" class="ui labeled icon button"><i class="ui icon angle left"></i>返回</a>
+      </div>
+      </div>
+		</form>
+	</div>
+</div>
+<script>
+var bakDefine = define;
+define = undefined;
+</script>
+<script src="<%- lib('blueimp-md5/2.10.0/js/md5.min.js') %>"></script>
+<script>
+define = bakDefine;
+</script>
+<script type="text/javascript">
+var editors = {
+  information: { defaultValue: <%- serializejs(edited_user.information) %> },
+};
+
+window.onEditorLoaded(function () {
+  for (var name in editors) {
+    var editor = editors[name];
+    var editorElement = document.getElementById(name);
+    var input = document.getElementsByName(name)[0];
+    editor.editor = window.createMarkdownEditor(editorElement, editor.defaultValue, input);
+  }
+
+  $('#submit_button').removeClass('disabled');
+});
+
+function make_md5(tag) {
+	if (tag.val()) {
+		tag.val(md5(tag.val() + "syzoj2_xxx"));
+	}
+}
+function check() {
+	old_password = $("#old_password");
+	password1 = $("#password1");
+	password2 = $("#password2");
+	if ($("#old_password").val() && password1.val() != password2.val()) {
+		$("#error").removeClass("success");
+		$("#error").removeClass("error");
+		$("#error").addClass("error");
+		$("#error_info").html("两次输入的密码不一致。");
+		$("#error").show();
+		return false;
+	}
+	make_md5(old_password);
+	make_md5(password1);
+	make_md5(password2);
+
+<% if (allowedManagePrivilege) { %>
+  $('.checkbox_privilege').each(function () {
+    if ($(this).checkbox('is checked')) {
+      var name = $(this).data('name');
+
+      var elem = document.createElement('input');
+      elem.type = 'hidden';
+      elem.value = name;
+      elem.name = 'privileges';
+      document.getElementById('form').appendChild(elem);
+    }
+  });
+<% } %>
+
+	return true;
+}
+</script>
+<script>
+$(function () {
+	$('.ui.dropdown:not(.simple)').dropdown();
+});
+</script>
+<% include footer %>

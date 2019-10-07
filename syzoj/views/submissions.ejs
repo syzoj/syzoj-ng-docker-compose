@@ -1,0 +1,181 @@
+<% this.title = '提交记录' %>
+<% include header %>
+<% include util %>
+<script src="<%- lib('textfit/2.3.1/textFit.min.js') %>"></script>
+<div class="padding">
+  <% if (displayConfig.inContest) { %>
+    <div class="ui large info message">
+      <div class="ui header">比赛 - <%= contest.title %></div>
+      <% if (displayConfig.showOthers) { %>
+        <p>您可以看到其他人的提交。
+      <% } else { %>
+        <p>您只能看到自己的提交。</p>
+      <% } %>
+    </div>
+  <% } %>
+
+  <form action="<%= syzoj.utils.makeUrl(displayConfig.inContest ? ['contest', contest.id, 'submissions'] : ['submissions']) %>" class="ui mini form" method="get" role="form" id="form">
+    <input type="hidden" name="contest" value="<%= form.contest %>" />
+    <div class="inline fields" style="margin-bottom: 25px; white-space: nowrap; ">
+      <label style="font-size: 1.2em; margin-right: 1px; ">题目：</label>
+      <div class="field"><input name="problem_id" style="width: 50px; " type="text" value="<%= form.problem_id %>"></div>
+      <% if (displayConfig.showOthers) { %>
+        <label style="font-size: 1.2em; margin-right: 1px; ">提交者：</label>
+        <div class="field"><input name="submitter" style="width: 100px; " type="text" value="<%= form.submitter %>"></div>
+      <% } %>
+      <% if (displayConfig.showScore) { %>
+        <label style="font-size: 1.2em; margin-right: 1px; ">分数：</label>
+        <div class="field" style="padding-right: 6px; "><input name="min_score" style="width: 45px; " type="text" value="<%= form.min_score || 0 %>"></div>
+        <label style="font-size: 1.2em; margin-right: 7px; ">～</label>
+        <div class="field"><input name="max_score" style="width: 45px; " type="text" value="<%= form.max_score || 100 %>"></div>
+      <% } %>
+      <label style="font-size: 1.2em; margin-right: 1px; ">语言：</label>
+      <div class="field">
+        <div class="ui fluid selection dropdown" id="select_language" style="width: 110px; ">
+          <input type="hidden" name="language" value="<%= form.language %>">
+          <i class="dropdown icon"></i>
+          <div class="default text"></div>
+          <div class="menu">
+            <div class="item" data-value=""><b>不限</b></div>
+            <div class="item" data-value="submit-answer"><b>提交答案</b></div>
+            <div class="item" data-value="non-submit-answer"><b>非提交答案</b></div>
+            <% for (let lang of syzoj.config.filter_enabled_languages) { %>
+              <div style="font-size: 12.5px; " class="item" data-value="<%= lang %>"><b><%= syzoj.languages[lang].show %></b></div>
+            <% } %>
+          </div>
+        </div>
+      </div>
+      <% if (displayConfig.showResult) { %>
+        <label style="font-size: 1.2em; margin-right: 1px; ">状态：</label>
+        <div class="field">
+          <div class="ui fluid selection dropdown" id="select_status" style="width: 210px; ">
+            <input type="hidden" name="status" value="<%= form.status %>">
+            <i class="dropdown icon"></i>
+            <div class="default text"></div>
+            <div class="menu">
+              <div class="item" data-value=""><b>不限</b><i class="dropdown icon" style="visibility: hidden; "></i></div>
+              <% for (let status in this.icon) { %>
+                <% if (this.iconHidden.includes(status)) continue; %>
+                <div class="item" data-value="<%= status === 'Pending' ? 'Waiting' : status %>"><span class="status <%= status.toLowerCase().split(' ').join('_') %>"><i class="<%= this.icon[status] %> icon"></i> <b><%= status %></b></div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% } %>
+      <button class="ui labeled icon mini button" type="submit">
+        <i class="search icon"></i>
+        查询
+      </button>
+      <% if (user && displayConfig.showOthers) { %>
+      <a class="ui mini labeled icon blue button" style="margin-left: auto; " id="my_submit">
+        <i class="user icon"></i>
+        我的提交
+      </a>
+      <script>
+      $(function () {
+        $('#my_submit').click(function () {
+          $('[name=submitter]').val(<%- serializejs(user.username) %>);
+          $('#form').submit();
+        });
+      });
+      </script>
+      <% } %>
+    </div>
+  </form>
+  <table id="vueAppFuckSafari" class="ui very basic center aligned table" style="white-space: nowrap; " id="table">
+    <thead>
+      <tr>
+        <th>编号</th>
+        <th>题目</th>
+        <th>状态</th>
+        <th v-if="displayConfig.showScore">分数</th>
+        <th v-if="displayConfig.showUsage">总时间</th>
+        <th v-if="displayConfig.showUsage">内存</th>
+        <th v-if="displayConfig.showCode">代码 / 答案文件</th>
+        <th>提交者</th>
+        <th>提交时间</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="item in items" :config="displayConfig" :show-rejudge="false" :data="item" is='submission-item' :rough="true">
+      </tr>
+    </tbody>
+  </table>
+  <% if (!items.length) { %>
+  <div style="background-color: #fff; height: 18px; margin-top: -18px; "></div>
+  <div class="ui placeholder segment" style="margin-top: -5px; ">
+    <div class="ui icon header">
+      <% if (isFiltered) { %>
+      <i class="ui search icon" style="margin-bottom: 20px; "></i>
+      找不到符合条件的提交
+      <% } else { %>
+      <i class="ui file icon" style="margin-bottom: 20px; "></i>
+      暂无提交
+      <% } %>
+    </div>
+  </div>
+  <% } else { %>
+  <br>
+  <% if (fast_pagination) { %>
+    <% include page_fast %>
+  <% } else { %>
+    <% include page %>
+  <% } %>
+  <% } %>
+</div>
+
+<script src="<%- lib('vue/2.5.21/vue.min.js') %>"></script>
+<script src="<%- lib('socket.io/2.2.0/socket.io.js') %>"></script>
+
+<% include submissions_item %>
+<script>
+$(function () {
+  $('#select_language').dropdown();
+  $('#select_status').dropdown();
+});
+const itemList = <%- serializejs(items) %>;
+const socketUrl = "/rough";
+const displayConfig = <%- serializejs(displayConfig) %>;
+
+const vueApp = new Vue({
+  el: '#vueAppFuckSafari',
+  data: {
+    items: itemList,
+    displayConfig: displayConfig
+  },
+});
+
+if (itemList.some(function(t) {return t.token != null;})) {
+  const socket = io(socketUrl);
+  socket.on('connect', function () {
+    for (let x of itemList.filter(function(x) {return x.token != null;})){
+      const getItem = function (id){ return itemList.find(function(x){ return x.info.taskId === id; })};
+      socket.on('start', function (data) {
+        getItem(data.taskId).running = true;
+      });
+
+      socket.on('finish', function (data) {
+        getItem(data.taskId).running = false;
+        getItem(data.taskId).result = data.result;
+        if (itemList.every(function(x){ return x.result; })) {
+          socket.close();
+        }
+      });
+
+      socket.emit('join', x.token, function (data) {
+        if (data && data.ok) {
+          if (data.running) {
+            x.running = true;
+          } else if (data.finished) {
+            x.running = false;
+            x.result = data.result;
+          }
+        } else {
+          alert("ERROR: " + JSON.stringify(data));
+        }
+      });
+    }
+  })
+}
+</script>
+<% include footer %>

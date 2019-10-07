@@ -1,0 +1,164 @@
+<% this.title = '编辑题目'; %>
+<% include header %>
+<style type="text/css">
+  .problem_header{
+    text-align: center;
+  }
+</style>
+<% include monaco-editor %>
+<div class="padding">
+    <form method="post" action="<%= syzoj.utils.makeUrl(['problem', req.params.id, 'edit']) %>">
+      <div class="ui top attached tabular menu">
+        <a class="item active" data-tab="edit">编辑</a>
+        <a class="item" data-tab="preview" id="preview_tab">预览</a>
+      </div>
+      <div class="ui bottom attached tab segment active" data-tab="edit">
+        <div class="ui form"><div class="field">
+          <% if (problem.allowedManage) { %>
+            <label for="id">
+              <% if (problem.new) { %>
+                题目编号
+              <% } else { %>
+                修改题目编号
+              <% } %>
+            </label>
+            <input type="text" id="id" name="id" placeholder="<% if (problem.new) { %>留空则自动延伸<% } else { %>留空则不修改<% } %>" value="<%= problem.id ? problem.id : '' %>">
+
+            <div style="margin-top: 15px; "></div>
+          <% } %>
+          <label for="title">题目名称</label>
+          <input class="font-content" type="text" id="title" name="title" value="<%= problem.title %>">
+        
+        <label style="margin-top: 15px; " for="description">题目描述</label>
+        </div></div>
+        <div class="editor editor-with-border" id="description" style="width: 100%; height: 300px; ">
+          <%- this.showLoadingEditor(); %>
+        </div>
+        <input type="hidden" name="description">
+        <div class="ui form"><div class="field">
+
+        <label style="margin-top: 15px; " for="input_format">输入格式</label>
+        </div></div>
+        <div class="editor editor-with-border" id="input_format" style="width: 100%; height: 200px; ">
+          <%- this.showLoadingEditor(); %>
+        </div>
+        <input type="hidden" name="input_format">
+        <div class="ui form"><div class="field">
+
+        <label style="margin-top: 15px; " for="output_format">输出格式</label>
+        </div></div>
+        <div class="editor editor-with-border" id="output_format" style="width: 100%; height: 200px; ">
+          <%- this.showLoadingEditor(); %>
+        </div>
+        <input type="hidden" name="output_format">
+        <div class="ui form"><div class="field">
+
+        <label style="margin-top: 15px; " for="example">样例</label>
+        </div></div>
+        <div class="editor editor-with-border" id="example" style="width: 100%; height: 300px; ">
+          <%- this.showLoadingEditor(); %>
+        </div>
+        <input type="hidden" name="example">
+        <div class="ui form"><div class="field">
+  
+        <label style="margin-top: 15px; " for="limit_and_hint">数据范围与提示</label>
+        </div></div>
+        <div class="editor editor-with-border" id="limit_and_hint" style="width: 100%; height: 200px; ">
+          <%- this.showLoadingEditor(); %>
+        </div>
+        <input type="hidden" name="limit_and_hint">
+        <div class="ui form"><div class="field">
+  
+          <label style="margin-top: 15px; ">标签</label>
+          <select class="ui fluid search dropdown" multiple="" id="search_tags" name="tags">
+            <% for (let tag of problem.tags) { %>
+              <option value="<%= tag.id %>" selected><%= tag.name %></option>
+            <% } %>
+          </select>
+          <div class="ui <% if (problem.is_anonymous) { %>checked <% } %>checkbox" style="margin-top: 15px; ">
+            <input <% if (problem.is_anonymous) { %>checked=""<% } %> name="is_anonymous" type="checkbox">
+            <label><strong>匿名上传</strong></label>
+            <p style="margin-top: 5px; ">选择后，上传者的用户名将不在题目页面中显示。</p>
+          </div>
+        </div></div>
+      </div>
+      <div class="ui bottom attached tab segment" data-tab="preview" id="preview">
+        <h1 class="ui header problem_header" id="pv-title"></h1>
+        <h2 class="ui header">题目描述</h2>
+        <div class="font-content" id="pv-description"></div>
+        <h2 class="ui header">输入格式</h2>
+        <div class="font-content" id="pv-input"></div>
+        <h2 class="ui header">输出格式</h2>
+        <div class="font-content" id="pv-output"></div>
+        <h2 class="ui header">样例</h2>
+        <div class="font-content" id="pv-example"></div>
+        <h2 class="ui header">数据范围与提示</h2>
+        <div class="font-content" id="pv-hint"></div>
+      </div>
+      <% if (problem.allowedEdit) { %>
+      <div style="text-align: center; ">
+      <button type="submit" id="submit_button" class="ui disabled labeled submit icon button">
+        <i class="icon edit"></i> 提交
+      </button>
+      </div>
+      <% } %>
+    </form>
+</div>
+<script type="text/javascript">
+var editors = {
+  description: { defaultValue: <%- serializejs(problem.description) %> },
+  input_format: { defaultValue: <%- serializejs(problem.input_format) %> },
+  output_format: { defaultValue: <%- serializejs(problem.output_format) %> },
+  example: { defaultValue: <%- serializejs(problem.example) %> },
+  limit_and_hint: { defaultValue: <%- serializejs(problem.limit_and_hint) %> }
+};
+
+window.onEditorLoaded(function () {
+  for (var name in editors) {
+    var editor = editors[name];
+    var editorElement = document.getElementById(name);
+    var input = document.getElementsByName(name)[0];
+    editor.editor = window.createMarkdownEditor(editorElement, editor.defaultValue, input);
+  }
+
+  $('#submit_button').removeClass('disabled');
+});
+
+$(function () {
+    function render(output, input) {
+      $.post('/api/markdown', { s: editors[input].editor.getValue() }, function (s) {
+        output.html(s);
+      });
+    }
+    $("#preview_tab").click(function () {
+      $("#pv-title").text($("#title").val());
+      $("#pv-description, #pv-input, #pv-output, #pv-example, #pv-hint").text('Loading...');
+      render($("#pv-description"), "description");
+      render($("#pv-input"), "input_format");
+      render($("#pv-output"), "output_format");
+      render($("#pv-example"), "example");
+      render($("#pv-hint"), "limit_and_hint");
+    });
+    $('.tabular.menu .item').tab();
+});
+</script>
+<script>
+$(function () {
+  $('#search_tags')
+    .dropdown({
+      debug: true,
+      apiSettings: {
+        url: '/api/v2/search/tags/{query}',
+        onResponse: function (response) {
+          var a = $('#search_tags').val().map(function (x) { return parseInt(x) });
+          if (response.results) {
+            response.results = response.results.filter(function(x) { return !a.includes(parseInt(x.value));});
+          }
+          return response;
+        },
+        cache: false
+      }
+    });
+});
+</script>
+<% include footer %>

@@ -1,0 +1,91 @@
+<%
+this.getStatusMeta = (status) => {
+  if (status.startsWith('Running')) return 'Running';
+  else return status;
+};
+
+const getOrderString = function(order) {
+  return order ? 'asc' : 'desc';
+}
+this.createSortableTitle = function(item, display, defaultOrder) {
+  const isCurrent = curSort === item;
+  const url = syzoj.utils.makeUrl(req,
+    Object.assign({}, req.query, {
+      sort: item,
+      order: getOrderString(isCurrent ? (!curOrder) : defaultOrder)
+    }));
+  const triangle = isCurrent ? `<i class="${curOrder ? "angle up" : "angle down"} icon"></i>` : "";
+  return `<a class="black-link" href="${url}">${display}${triangle}</a>`;
+}
+
+this.isPending = (status) => {
+  let pending = [
+    'Waiting',
+    'Compiling',
+    'Running'
+  ];
+  return pending.includes(this.getStatusMeta(status));
+};
+
+this.alpha = number => {
+  if (number && parseInt(number) == number && parseInt(number) > 0) return String.fromCharCode('A'.charCodeAt(0) + parseInt(number) - 1);
+};
+
+this.icon = {
+  'Accepted': 'checkmark',
+  'Success': 'checkmark',  // Custom test
+  'Wrong Answer': 'remove',
+  'Runtime Error': 'bomb',
+  'Invalid Interaction': 'ban',
+  'Time Limit Exceeded': 'clock',
+  'Memory Limit Exceeded': 'microchip',
+  'Output Limit Exceeded': 'print',
+  'File Error': 'file outline',
+  'Waiting': 'hourglass half',
+  'Running': 'spinner',
+  'Compiling': 'spinner',
+  'Judging': 'spinner',
+  'Pending': 'hourglass half',
+  'Compile Error': 'code',
+  'Submitted': 'checkmark', // NOI contests
+  'System Error': 'server',
+  'No Testdata': 'folder open outline',
+  'Partially Correct': 'minus',
+  'Judgement Failed': 'server',
+  'Skipped': 'ban',
+  'Unknown': 'question circle'
+};
+
+this.iconHidden = [
+  'Success',
+  'Submitted',
+  'Compiling',
+  'Running',
+  'Waiting',
+  'Judging',
+  'Skipped'
+];
+
+this.builtInCdnUrl = 'https://cdn.jsdelivr.net/npm/syzoj-public-cdn@1.0.5';
+
+this.lib = uri => {
+  if (useLocalLibs || !syzoj.config.cdnjs_url) {
+    return syzoj.utils.makeUrl(['cdnjs', uri]);
+  } else if (syzoj.config.cdnjs_url === 'built-in') {
+    return builtInCdnUrl + '/cdnjs/' + uri;
+  } else {
+    return syzoj.config.cdnjs_url + '/' + uri;
+  }
+}
+
+this.selfLib = uri => {
+  if (useLocalLibs || !syzoj.config.self_cdn_url) {
+    return syzoj.utils.makeUrl(['self', uri]);
+  } else if (syzoj.config.self_cdn_url === 'built-in') {
+    return builtInCdnUrl + '/self/' + uri;
+  } else {
+    return syzoj.config.self_cdn_url + '/' + uri;
+  }
+}
+
+%>
